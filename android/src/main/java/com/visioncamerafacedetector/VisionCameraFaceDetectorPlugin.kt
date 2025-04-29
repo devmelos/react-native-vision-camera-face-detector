@@ -16,6 +16,8 @@ import com.mrousavy.camera.core.types.Position
 import com.mrousavy.camera.frameprocessors.Frame
 import com.mrousavy.camera.frameprocessors.FrameProcessorPlugin
 import com.mrousavy.camera.frameprocessors.VisionCameraProxy
+import android.media.Image;
+import java.nio.ByteBuffer;
 
 private const val TAG = "FaceDetector"
 class VisionCameraFaceDetectorPlugin(
@@ -286,12 +288,40 @@ class VisionCameraFaceDetectorPlugin(
     params: Map<String, Any>?
   ): Any {
     val result = ArrayList<Map<String, Any>>()
+    val resultMap: MutableMap<String, Any> = HashMap()
     
     try {
       val image = InputImage.fromMediaImage(frame.image, getImageOrientation())
       // we need to invert sizes as frame is always -90deg rotated
+      val planes: Array<Image.Plane> = frame.image.planes
+      val yPlaneBuffer: ByteBuffer = planes[0].buffer // Y plane contains the luminance information
+
+      // Optional: You could downsample here by only reading every nth pixel
       val width = image.height.toDouble()
       val height = image.width.toDouble()
+      val pixelStride: Int = planes[0].pixelStride
+      val rowStride: Int = planes[0].rowStride
+      val rowPadding: Int = rowStride - pixelStride * width
+
+      var totalLuminance: Long = 0
+      var pixelCount = 0
+
+      // Loop over the Y plane buffer and calculate the total luminance
+      for (y in 0 until height step 50) {
+          for (x in 0 until width step 50) {
+              val luminance: Int = yPlaneBuffer[y * rowStride + x * pixelStride].toInt() and 0xFF // Convert to unsigned
+              totalLuminance += luminance
+              pixelCount++
+          }
+          yPlaneBuffer.position(yPlaneBuffer.position() + rowPadding) // Skip the row padding
+      }
+
+      // Calculate the average brightness
+      val averageBrightness: Float = totalLuminance.toFloat() / pixelCount
+      val normalizedAverageBrightness: Float = averageBrightness / 255.0f
+
+      // val width = image.height.toDouble()
+      // val height = image.width.toDouble()
       val scaleX = if(autoMode) windowWidth / width else 1.0
       val scaleY = if(autoMode) windowHeight / height else 1.0
       val task = faceDetector!!.process(image)
@@ -337,6 +367,8 @@ class VisionCameraFaceDetectorPlugin(
         )
         result.add(map)
       }
+      resultMap["brightness"] = normalizedAverageBrightness.toDouble()
+      resultMap["faces"] = result;
     } catch (e: Exception) {
       Log.e(TAG, "Error processing face detection: ", e)
     } catch (e: FrameInvalidError) {

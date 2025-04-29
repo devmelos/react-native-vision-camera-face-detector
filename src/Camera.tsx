@@ -3,7 +3,6 @@ import {
   Camera as VisionCamera,
   // runAsync,
   useFrameProcessor,
-  useSkiaFrameProcessor
 } from 'react-native-vision-camera'
 import {
   Worklets,
@@ -178,18 +177,6 @@ export const Camera = React.forwardRef( ( {
     runOnAsyncContext( internal )
   }
 
-  /**
-   * Skia frame processor
-   */
-  const skiaFrameProcessor = useSkiaFrameProcessor( ( frame ) => {
-    'worklet'
-    frame.render()
-    skiaActions!( faces.value, frame )
-    runAsync( frame )
-  }, [
-    runOnAsyncContext,
-    skiaActions
-  ] )
 
   /**
    * Default frame processor

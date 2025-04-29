@@ -117,10 +117,10 @@ public class VisionCameraFaceDetector: FrameProcessorPlugin {
     scaleY: CGFloat
   ) -> [String:Any] {
     let boundingBox = face.frame
-    let width = boundingBox.width * scaleX
-    let height = boundingBox.height * scaleY
-    let x = boundingBox.origin.x * scaleX
-    let y = boundingBox.origin.y * scaleY
+    let width = boundingBox.width
+    let height = boundingBox.height
+    let x = boundingBox.origin.x
+    let y = boundingBox.origin.y
     
     
     return [

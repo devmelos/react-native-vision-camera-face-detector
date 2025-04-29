@@ -190,7 +190,6 @@ export const Camera = React.forwardRef( ( {
    * Camera frame processor
    */
   const frameProcessor = ( () => {
-    const { autoMode } = faceDetectionOptions ?? {}
     return cameraFrameProcessor
   } )()
 

@@ -191,11 +191,6 @@ export const Camera = React.forwardRef( ( {
    */
   const frameProcessor = ( () => {
     const { autoMode } = faceDetectionOptions ?? {}
-    if (
-      !autoMode &&
-      !!skiaActions
-    ) return skiaFrameProcessor
-
     return cameraFrameProcessor
   } )()
 

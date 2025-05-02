@@ -283,6 +283,17 @@ class VisionCameraFaceDetectorPlugin(
     }
   }
 
+  private fun getFrameRotation(
+    orientation: Orientation
+  ): Int {
+    return when (orientation) {
+      Orientation.PORTRAIT -> 0
+      Orientation.LANDSCAPE_LEFT -> 270
+      Orientation.PORTRAIT_UPSIDE_DOWN -> 180
+      Orientation.LANDSCAPE_RIGHT -> 90
+    }
+  }
+
   override fun callback(
     frame: Frame,
     params: Map<String, Any>?
@@ -291,8 +302,9 @@ class VisionCameraFaceDetectorPlugin(
     val resultMap: MutableMap<String, Any> = HashMap()
     
     try {
+      
       val frameImage = frame.image;
-      val image = InputImage.fromMediaImage(frameImage, getImageOrientation())
+      val image = InputImage.fromMediaImage(frameImage, getFrameRotation(frame.orientation))
       // we need to invert sizes as frame is always -90deg rotated
       val planes: Array<Image.Plane> = frameImage.planes
       val yPlaneBuffer: ByteBuffer = planes[0].buffer // Y plane contains the luminance information

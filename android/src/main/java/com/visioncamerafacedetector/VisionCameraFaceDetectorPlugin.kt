@@ -16,6 +16,7 @@ import com.mrousavy.camera.core.types.Position
 import com.mrousavy.camera.frameprocessors.Frame
 import com.mrousavy.camera.frameprocessors.FrameProcessorPlugin
 import com.mrousavy.camera.frameprocessors.VisionCameraProxy
+import com.mrousavy.camera.core.types.Orientation
 import android.media.Image;
 import java.nio.ByteBuffer;
 

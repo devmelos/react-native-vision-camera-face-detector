@@ -389,6 +389,6 @@ class VisionCameraFaceDetectorPlugin(
       Log.e(TAG, "Frame invalid error: ", e)
     }
 
-    return result
+    return resultMap
   }
 }

@@ -22,8 +22,8 @@ import java.nio.ByteBuffer;
 
 private const val TAG = "FaceDetector"
 class VisionCameraFaceDetectorPlugin(
-  proxy: VisionCameraProxy,
-  options: Map<String, Any>?
+  options: Map<String, Any>?,
+  private val orientationManager: VisionCameraFaceDetectorOrientation
 ) : FrameProcessorPlugin() {
   // detection props
   private var autoMode = false
@@ -35,7 +35,6 @@ class VisionCameraFaceDetectorPlugin(
   private var windowWidth = 1.0
   private var windowHeight = 1.0
   private var cameraFacing: Position = Position.FRONT
-  private val orientationManager = VisionCameraFaceDetectorOrientation(proxy.context)
 
   init {
     // handle auto scaling
@@ -300,39 +299,39 @@ class VisionCameraFaceDetectorPlugin(
     params: Map<String, Any>?
   ): Any {
     val result = ArrayList<Map<String, Any>>()
-    val resultMap: MutableMap<String, Any> = HashMap()
+    // val resultMap: MutableMap<String, Any> = HashMap()
     
     try {
       
       val frameImage = frame.image;
       val image = InputImage.fromMediaImage(frameImage, getFrameRotation(frame.orientation))
       // we need to invert sizes as frame is always -90deg rotated
-      val planes: Array<Image.Plane> = frameImage.planes
-      val yPlaneBuffer: ByteBuffer = planes[0].buffer // Y plane contains the luminance information
+      // val planes: Array<Image.Plane> = frameImage.planes
+      // val yPlaneBuffer: ByteBuffer = planes[0].buffer // Y plane contains the luminance information
 
-       // Optional: You could downsample here by only reading every nth pixel
-      val _width: Int = frameImage.width
-      val _height: Int = frameImage.height
-      val pixelStride: Int = planes[0].pixelStride
-      val rowStride: Int = planes[0].rowStride
-      val rowPadding: Int = rowStride - pixelStride * _width
+      //  // Optional: You could downsample here by only reading every nth pixel
+      // val _width: Int = frameImage.width
+      // val _height: Int = frameImage.height
+      // val pixelStride: Int = planes[0].pixelStride
+      // val rowStride: Int = planes[0].rowStride
+      // val rowPadding: Int = rowStride - pixelStride * _width
 
-      var totalLuminance: Long = 0
-      var pixelCount = 0
+      // var totalLuminance: Long = 0
+      // var pixelCount = 0
 
-      // Loop over the Y plane buffer and calculate the total luminance
-      for (y in 0 until _height step 50) {
-          for (x in 0 until _width step 50) {
-              val luminance: Int = yPlaneBuffer[y * rowStride + x * pixelStride].toInt() and 0xFF // Convert to unsigned
-              totalLuminance += luminance
-              pixelCount++
-          }
-          yPlaneBuffer.position(yPlaneBuffer.position() + rowPadding) // Skip the row padding
-      }
+      // // Loop over the Y plane buffer and calculate the total luminance
+      // for (y in 0 until _height step 50) {
+      //     for (x in 0 until _width step 50) {
+      //         val luminance: Int = yPlaneBuffer[y * rowStride + x * pixelStride].toInt() and 0xFF // Convert to unsigned
+      //         totalLuminance += luminance
+      //         pixelCount++
+      //     }
+      //     yPlaneBuffer.position(yPlaneBuffer.position() + rowPadding) // Skip the row padding
+      // }
 
-      // Calculate the average brightness
-      val averageBrightness: Float = totalLuminance.toFloat() / pixelCount
-      val normalizedAverageBrightness: Float = averageBrightness / 255.0f
+      // // Calculate the average brightness
+      // val averageBrightness: Float = totalLuminance.toFloat() / pixelCount
+      // val normalizedAverageBrightness: Float = averageBrightness / 255.0f
 
       val width = image.height.toDouble()
       val height = image.width.toDouble()
@@ -381,14 +380,14 @@ class VisionCameraFaceDetectorPlugin(
         )
         result.add(map)
       }
-      resultMap["brightness"] = normalizedAverageBrightness.toDouble()
-      resultMap["faces"] = result;
+      // resultMap["brightness"] = normalizedAverageBrightness.toDouble()
+      // resultMap["faces"] = result;
     } catch (e: Exception) {
       Log.e(TAG, "Error processing face detection: ", e)
     } catch (e: FrameInvalidError) {
       Log.e(TAG, "Frame invalid error: ", e)
     }
 
-    return resultMap
+    return result
   }
 }

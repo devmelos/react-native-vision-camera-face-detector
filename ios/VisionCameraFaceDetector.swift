@@ -258,8 +258,8 @@ public class VisionCameraFaceDetector: FrameProcessorPlugin {
     withArguments arguments: [AnyHashable: Any]?
   ) -> Any {
     var result: [Any] = []
-    var resultData: [String: Any] = [:]
-    var normalizedBrightness:Float = 0.5;
+    // var resultData: [String: Any] = [:]
+    // var normalizedBrightness:Float = 0.5;
     do {
       // we need to invert sizes as frame is always -90deg rotated
       let width = CGFloat(frame.height)
@@ -277,15 +277,15 @@ public class VisionCameraFaceDetector: FrameProcessorPlugin {
         scaleY = CGFloat(1)
       }
 
-      // Convert CMSampleBuffer to CVImageBuffer
-      if let imageBuffer = CMSampleBufferGetImageBuffer(frame.buffer) {
-          // Calculate and normalize average brightness
-          let avgBrightness = calculateAverageBrightness(from: imageBuffer)
-          normalizedBrightness = normalizeBrightness(avgBrightness)
-          // print("Normalized Brightness: \(normalizedBrightness)")
-      } else {
-          // print("Failed to get CVImageBuffer from CMSampleBuffer.")
-      }
+      // // Convert CMSampleBuffer to CVImageBuffer
+      // if let imageBuffer = CMSampleBufferGetImageBuffer(frame.buffer) {
+      //     // Calculate and normalize average brightness
+      //     let avgBrightness = calculateAverageBrightness(from: imageBuffer)
+      //     normalizedBrightness = normalizeBrightness(avgBrightness)
+      //     // print("Normalized Brightness: \(normalizedBrightness)")
+      // } else {
+      //     // print("Failed to get CVImageBuffer from CMSampleBuffer.")
+      // }
 
       let faces: [Face] = try faceDetector!.results(in: image)
       for face in faces {
@@ -334,75 +334,75 @@ public class VisionCameraFaceDetector: FrameProcessorPlugin {
       print("Error processing face detection: \(error)")
     }
 
-    resultData["faces"] = result
-    resultData["brightness"] = normalizedBrightness
-    return resultData
+    // resultData["faces"] = result
+    // resultData["brightness"] = normalizedBrightness
+    return result;
   }
 
   // Function to calculate the average brightness from an image buffer
-  func calculateAverageBrightness(from buffer: CVImageBuffer) -> Float {
-      CVPixelBufferLockBaseAddress(buffer, .readOnly)
+  // func calculateAverageBrightness(from buffer: CVImageBuffer) -> Float {
+  //     CVPixelBufferLockBaseAddress(buffer, .readOnly)
     
-    let width = CVPixelBufferGetWidth(buffer)
-    let height = CVPixelBufferGetHeight(buffer)
-    let baseAddress = CVPixelBufferGetBaseAddress(buffer)
-    let bytesPerRow = CVPixelBufferGetBytesPerRow(buffer)
+  //   let width = CVPixelBufferGetWidth(buffer)
+  //   let height = CVPixelBufferGetHeight(buffer)
+  //   let baseAddress = CVPixelBufferGetBaseAddress(buffer)
+  //   let bytesPerRow = CVPixelBufferGetBytesPerRow(buffer)
     
-    guard let baseAddress = baseAddress else {
-        CVPixelBufferUnlockBaseAddress(buffer, .readOnly)
-        return 0
-    }
+  //   guard let baseAddress = baseAddress else {
+  //       CVPixelBufferUnlockBaseAddress(buffer, .readOnly)
+  //       return 0
+  //   }
     
-    let pixelBuffer = baseAddress.assumingMemoryBound(to: UInt8.self)
-    let luminanceFactors = SIMD3<Float>(0.299, 0.587, 0.114)
+  //   let pixelBuffer = baseAddress.assumingMemoryBound(to: UInt8.self)
+  //   let luminanceFactors = SIMD3<Float>(0.299, 0.587, 0.114)
     
-    // Multithreaded processing
-    let group = DispatchGroup()
-    let concurrentQueue = DispatchQueue(label: "brightnessQueue", attributes: .concurrent)
+  //   // Multithreaded processing
+  //   let group = DispatchGroup()
+  //   let concurrentQueue = DispatchQueue(label: "brightnessQueue", attributes: .concurrent)
     
-    var totalBrightness: Float = 0
-    let pixelCount = (width / 30) * (height / 30);
-    let chunkSize = height / ProcessInfo.processInfo.activeProcessorCount
+  //   var totalBrightness: Float = 0
+  //   let pixelCount = (width / 30) * (height / 30);
+  //   let chunkSize = height / ProcessInfo.processInfo.activeProcessorCount
     
-    let totalBrightnessPointer = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-    totalBrightnessPointer.pointee = 0
+  //   let totalBrightnessPointer = UnsafeMutablePointer<Float>.allocate(capacity: 1)
+  //   totalBrightnessPointer.pointee = 0
     
-    for chunkStart in stride(from: 0, to: height, by: chunkSize) {
-        let chunkEnd = min(chunkStart + chunkSize, height)
+  //   for chunkStart in stride(from: 0, to: height, by: chunkSize) {
+  //       let chunkEnd = min(chunkStart + chunkSize, height)
         
-        concurrentQueue.async(group: group) {
-            var localBrightness: Float = 0
-            for y in stride(from: chunkStart, to: chunkEnd, by: 30) {
-                let rowPointer = pixelBuffer + y * bytesPerRow
-                for x in stride(from: 0, to: width, by: 30) {
-                    let pixelPointer = rowPointer + x * 4
-                    let red = Float(pixelPointer[0]) / 255.0
-                    let green = Float(pixelPointer[1]) / 255.0
-                    let blue = Float(pixelPointer[2]) / 255.0
+  //       concurrentQueue.async(group: group) {
+  //           var localBrightness: Float = 0
+  //           for y in stride(from: chunkStart, to: chunkEnd, by: 30) {
+  //               let rowPointer = pixelBuffer + y * bytesPerRow
+  //               for x in stride(from: 0, to: width, by: 30) {
+  //                   let pixelPointer = rowPointer + x * 4
+  //                   let red = Float(pixelPointer[0]) / 255.0
+  //                   let green = Float(pixelPointer[1]) / 255.0
+  //                   let blue = Float(pixelPointer[2]) / 255.0
                     
-                    let colorVector = SIMD3<Float>(red, green, blue)
-                    localBrightness += dot(colorVector, luminanceFactors)
-                }
-            }
+  //                   let colorVector = SIMD3<Float>(red, green, blue)
+  //                   localBrightness += dot(colorVector, luminanceFactors)
+  //               }
+  //           }
             
-            // Safely update the totalBrightness across threads
-            DispatchQueue.global().sync {
-                totalBrightnessPointer.pointee += localBrightness
-            }
-        }
-    }
+  //           // Safely update the totalBrightness across threads
+  //           DispatchQueue.global().sync {
+  //               totalBrightnessPointer.pointee += localBrightness
+  //           }
+  //       }
+  //   }
     
-    group.wait()
+  //   group.wait()
     
-    let averageBrightness = totalBrightnessPointer.pointee / Float(pixelCount)
-    totalBrightnessPointer.deallocate()
+  //   let averageBrightness = totalBrightnessPointer.pointee / Float(pixelCount)
+  //   totalBrightnessPointer.deallocate()
     
-    CVPixelBufferUnlockBaseAddress(buffer, .readOnly)
+  //   CVPixelBufferUnlockBaseAddress(buffer, .readOnly)
     
-    return averageBrightness
-  }
-   // Function to normalize brightness to a range [0, 1]
-  func normalizeBrightness(_ brightness: Float) -> Float {
-      return min(max(brightness, 0), 1)  // Ensuring the value stays within [0, 1]
-  }
+  //   return averageBrightness
+  // }
+  //  // Function to normalize brightness to a range [0, 1]
+  // func normalizeBrightness(_ brightness: Float) -> Float {
+  //     return min(max(brightness, 0), 1)  // Ensuring the value stays within [0, 1]
+  // }
 }
